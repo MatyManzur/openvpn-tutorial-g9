@@ -1,5 +1,7 @@
 # Tutorial OpenVPN
-### Alumnos
+Este es la guía de OpenVPN para la presentación de Redes de Comunicación. Se van a levantar distintas arquitecturas de VPNs mediante clientes y servidores OpenVPN y se agregan algunos extras para administrar y filtrar contenido en redes de OpenVPN.
+
+### Integrantes el grupo
 + Manzur Matías 62498
 + Rupnik Franco 62032
 + Shih Federico 62293
