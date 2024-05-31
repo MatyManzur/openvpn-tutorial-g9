@@ -24,7 +24,7 @@ sudo apt install net-tools openvpn easy-rsa
 
 ## PKI Setup
 
-Primero necesitamos crear los certificados SSL/TLS para autenticación entre el cliente y servidor VPN. Para ello vamos a crear:
+Primero necesitamos crear los certificados SSL/TLS para autenticación entre el cliente y servidor VPN. Para ello, vamos a crear:
 
 - Una clave privada y un certificado con clave pública para el servidor y para cada cliente
 - Un certificado y clave de la autoridad certificante primaria (CA), para firmar los certificados del servidor y los clientes.
@@ -147,6 +147,14 @@ push "route 172.31.16.0 255.255.240.0"
 ;duplicate-cn
 # Descomentar para setear la cantidad máxima de clientes conectados
 ;max-clients 100
+# Path del archivo donde se va a ir sobrescribiendo información sobre el estado del servidor
+status /var/log/openvpn/openvpn-status.log
+# Descomentar para indicar un archivo donde imprimir los logs del servidor
+;log         /var/log/openvpn/openvpn.log
+# o usar log-append si se quiere appendera en lugar de truncar al reiniciar el servidor
+;log-append  /var/log/openvpn/openvpn.log
+# Nivel de verbosidad de logs (número entre 0 y 9)
+verb 3
 ```
 
 Cuando estamos en Cliente a Sitio, en el caso de que querramos que el cliente acceda a otros hosts de la red del sitio, o a internet usando al túnel como default gateway, tenemos dos opciones:
@@ -185,7 +193,7 @@ Documentación oficial para Ubuntu: [https://ubuntu.com/server/docs/how-to-insta
 
 ![proxy](README_img/proxy.png)
 
-Vamos a usar instancias dos EC2 (Servidor OpenVPN y Servidor Proxy) IPs publicas distintas para poder mostrar fácilmente que se usa un proxy, pero no debería haber problema si solo se tiene una IP publica asignada al Router lo importante es que se redirija el tráfico hacia el Proxy.
+Vamos a usar instancias dos EC2 (Servidor OpenVPN y Servidor Proxy) con IPs publicas distintas para poder mostrar fácilmente que se usa un proxy, pero no debería haber problema si sólo se tiene una IP pública asignada al Router, pues lo importante es que se redirija el tráfico hacia el Proxy.
 
 Vamos a descargar TinyProxy - un proxy open source liviano, para ello vamos a correr los siguientes comandos en la terminal de la instancia Proxy:
 
@@ -236,7 +244,7 @@ ConnectPort 443
 ConnectPort 563
 ```
 
-Para puerto se usa el `8888` pero se puede elegir otro puerto, si se usa uno menor a `1024` se deberá usar sudo. Para Listen se debe poner la IP de la interfaz por la cual queremos que escuche, en nuestro caso `172.31.64.43` . BindSame se usa para que la IP por donde se bindea la misma IP por donde se escucha.
+Como puerto se usa el `8888` pero se puede elegir otro puerto, aunque si se usa uno menor a `1024` se deberá usar sudo. Para `Listen` se debe poner la IP de la interfaz por la cual queremos que escuche, en nuestro caso `172.31.64.43` . `BindSame` se usa para que la IP por donde se bindea la misma IP por donde se escucha.
 
 - Asegurarse que se tiene abierto el firewall en el puerto 8888
 
@@ -260,7 +268,7 @@ push "route 172.31.16.0 255.255.240.0" #la subred del sitio del server
 sudo systemctl restart openvpn@myserver
 ```
 
-Finalmente, para los clientes, se deberá configurar el servidor proxy como intermediario. Esta configuración dependerá del cliente, para windows se deberá hacer por medio del menu de opciones y para el caso de Linux se podrá fijar el proxy de manera explícita o con variables de entorno.
+Finalmente, **desde los clientes**, se deberá configurar el servidor proxy como intermediario. Esta configuración dependerá del cliente: para windows se deberá hacer por medio del menu de opciones y para el caso de Linux se podrá fijar el proxy de manera explícita o con variables de entorno. Para el caso de Linux:
 
 ```bash
 #Usarlo explicito
@@ -285,7 +293,7 @@ unset HTTPS_PROXY
 
 ### (Extra) Usar el web proxy para filtrar sitios web
 
-Teniendo el proxy web, tiny-proxy, ya instalado y configurado vamos a crear un archivo con las reglas de filtrado(una regla por línea y comentarios con # → son expresiones regulares POSIX)
+Teniendo el proxy web, tiny-proxy, ya instalado y configurado vamos a crear un archivo con las reglas de filtrado (de a una regla por línea y comentarios con # → son expresiones regulares POSIX)
 
 ```bash
 cd /etc/tinyproxy/
@@ -307,7 +315,7 @@ cnn\.com
 
 ```
 
-Teniendo el archivo con los filtrados, vamos a añadir el archivo a la configuración con la línea: `Filter "/etc/tinyproxy/filter.txt"` (si el archivo filter no esta en el mismo directorio, seria poner el path al mismo), usando el archivo de configuración anterior quedaría así:
+Teniendo el archivo con los filtrados, vamos a añadir el archivo a la configuración con la línea: `Filter "/etc/tinyproxy/filter.txt"`, usando el archivo de configuración anterior quedaría así:
 
 ```bash
 vim tinyproxy.conf #abrimos el archivo para editar
@@ -338,9 +346,28 @@ ConnectPort 563
 Filter "/etc/tinyproxy/filter.txt"
 ```
 
-Luego con volver a iniciar el proxy, con `sudo systemctl restart tinyproxy`,ya tenemos las reglas de filtrado puestas.
+Luego con volver a iniciar el proxy, con `sudo systemctl restart tinyproxy`, y ya tendremos las reglas de filtrado puestas.
+
+## (Extra) Script de monitoreo del estado del servidor
+
+Implementamos un script de bash para monitorear el estado actual del servidor en el tiempo. El script se encuentra en este repositorio con el nombre `monitor-server-stats.sh`.
+
+Para que funcione correctamente, es necesario que esté descomentada la línea `status /var/log/openvpn/openvpn-status.log` del archivo de configuración del servidor `server.conf`.
+
+Para correrlo, bastará con ejecutar:
+```shell
+# si usamos el path default para este archivo .log:
+sudo ./monitor-server-stats.sh
+# o si usamos otro path:
+sudo ./monitor-server-status.sh /path/to/openvpn-status.log
+```
+El proceso tomará la terminal y nos mostrará información de los clientes conectados y redes involucradas en la conexión VPN. La información se actualizará cada unos segundos.
+
+![monitor](README_img/monitor.png)
 
 # OpenVPN Client
+
+Ahora vamos a realizar la configuración desde el cliente.
 
 ```bash
 sudo apt install openvpn
@@ -443,6 +470,7 @@ Por otro lado, tenemos que crear un archivo de configuración para cada cliente 
 ```bash
 # incluimos la red del lado remoto
 iroute 192.168.0.0 255.255.255.0
+# acá podemos agregar toda la configuración que querramos que sea específica para este cliente
 ```
 
 También, **debemos activar el forwardeo de paquetes** de la misma manera que en cliente a sitio. 
@@ -490,18 +518,20 @@ Luego marcamos la opción **Stop** y guardamos.
 
 ![multi_site](README_img/multi_site.png)
 
-Teniendo ya dos sitios con la configuración de sitio a sitio(Botsuana y Uzbekistan), habrá que realizar los siguientes pasos para que los sitios se puedan comunicar entre si. 
+Teniendo ya dos sitios cada uno con la configuración de sitio a sitio con el servidor principal (Botsuana-Argentina y Uzbekistán-Argentina), habrá que realizar los siguientes pasos para que los sitios se puedan comunicar entre sí:
 
-### Configuración en Servidor(Main-Argentina)
+### Configuración en Servidor (Main-Argentina)
 
-Habra que añadir las rutas entre los servidores dentro de la configuración de los mismos, para ellos iremos al directorio  `/etc/openvpn/ccd/` y en el mismo tendremos los archivos de configuración de los sitios. Vamos a editar cada uno y añadir una ruta hacia el otro sitio.
+Habrá que añadir las rutas entre los servidores dentro de la configuración de los mismos, para ellos iremos al directorio  `/etc/openvpn/ccd/` y en el mismo tendremos los archivos de configuración de los sitios. Vamos a editar cada uno y añadir una ruta hacia el otro sitio.
 
 - Botsuana (172.16.1.0/24): vamos a agregar `push "route 192.168.0.0 255.255.255.0"`
-- Uzbekistan(192.168.0.0/24): vamos a  agregar `push "route 172.16.1.0 255.255.255.0"`
+- Uzbekistán (192.168.0.0/24): vamos a  agregar `push "route 172.16.1.0 255.255.255.0"`
 
-### Configuración en Sitios(Botsuana y Uzbekistan)
+Además, en el archivo de configuración del servidor `server.conf` debemos asegurarnos que la línea `client-to-client` está descomentada.
+
+### Configuración en Sitios Remotos (Botsuana y Uzbekistán)
 
 De la misma manera que se agregaron rutas estáticas en los routers para alcanzar la red del servidor main, se tendrá que agregar rutas estáticas para los clientes entre si.
 
 - Botsuana (172.16.1.0/24): vamos routear los paquetes de 192.168.0.0/24 hacia 172.16.1.10 (cliente ovpn)
-- Uzbekistan(192.168.0.0/24): vamos routear los paquetes de 172.16.1.0/24 hacia 192.168.0.10 (cliente ovpn)
+- Uzbekistán(192.168.0.0/24): vamos routear los paquetes de 172.16.1.0/24 hacia 192.168.0.10 (cliente ovpn)
