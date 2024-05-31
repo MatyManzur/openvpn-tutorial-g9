@@ -32,8 +32,7 @@ print_table() {
     ' $LOG_FILE
 }
 
-tail -F $LOG_FILE 2>/dev/null | while read -r line; do
-    if [[ "$line" == *"Updated,"* ]]; then
-        print_table
-    fi
+while true; do
+    print_table
+    sleep 4
 done
