@@ -1,5 +1,6 @@
 # Ovpn-admin (UI)
 
+**Aclaración:** esta interfaz no fue implementada por nosotros. Sin embargo, consideramos que puede ser útil para una configuración rápida y sencilla de un servidor OpenVPN, por lo que hicimos un breve instructivo sobre cómo utilizarla. Link al repositorio del autor:
 [https://github.com/flant/ovpn-admin](https://github.com/flant/ovpn-admin)
 
 Es una interfaz simple para administrar un servidor OpenVPN que permite crear clientes con sus certificados y generar el `client.conf` de manera automática. Permite hacer configurar una conexión cliente a sitio sólo desde la interfaz.
