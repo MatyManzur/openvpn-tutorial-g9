@@ -9,6 +9,12 @@ Además de las configuraciones de OpenVPN, se mostrará cómo se crea la arquite
 + Shih Federico 62293
 + Báez Mauro 61747
 
+**Anexo 1:** [Interfaz para crear un servidor OpenVPN de manera sencilla](ovpn-admin-ui.md)
+
+**Anexo 2:** [Instructivo para crear una red de EC2 en AWS](aws_network_setup.md)
+
+**Anexo 3:** [Script para monitorear estado del servidor OpenVPN](monitor-server-stats.sh) -> Instrucciones de uso más [abajo](README.md#extra-script-de-monitoreo-del-estado-del-servidor)
+
 # Conexión Cliente a Sitio
 
 ![client_site](README_img/client_site.png)
