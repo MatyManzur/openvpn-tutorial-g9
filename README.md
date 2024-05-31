@@ -1,5 +1,7 @@
 # Tutorial OpenVPN
-Este es la guía de OpenVPN para la presentación de Redes de Comunicación. Se van a levantar distintas arquitecturas de VPNs mediante clientes y servidores OpenVPN y se agregan algunos extras para administrar y filtrar contenido en redes de OpenVPN.
+Este es la guía de OpenVPN para la presentación de Redes de Información. Se van a levantar distintas arquitecturas de VPNs mediante clientes y servidores OpenVPN y se agregan algunos extras para administrar y filtrar contenido en redes de OpenVPN.
+
+Además de las configuraciones de OpenVPN, se mostrará cómo se crea la arquitectura en un entorno de la nube, en este caso, Amazon Web Services. Esto sirve como una buena representación de la distancia física entre un entorno privado (como nuestro sistema) y un entorno de la nube, y muestra los beneficios que puede traer establecer un servidor VPN en un entorno Cloud.
 
 ### Integrantes el grupo
 + Manzur Matías 62498
